@@ -135,12 +135,14 @@ int main(int argc, char *argv[])
         cout << "Single thread execution time: " << (double)TIME_DIFF(std::chrono::microseconds, begin, end) / 1000.0 << " ms\n";
 
         for (int i = 0; i < output_row * output_col; ++i)
+        {
             if (output_single[i] != output_reference[i])
             {
                 cout << "Mismatch at " << i << "\n";
                 cout << "SingleThread output: " << output_single[i] << ", required output: " << output_reference[i] << "\n";
                 exit(0);
             }
+        }
     }
 
     // Execute multi-thread
