@@ -6,7 +6,7 @@ In this assignment, your task is to optimize the problem of “Dilated Convoluti
 A. Input Matrix of dimensions: $\text{Input-Row} \times \text{Input-Column}$.
 
 B. Kernel Matrix of dimensions: $\text{Kernel-Row} \times \text{Kernel-Column}$. 
-
+x
 ### Output:  
 
 An Output Matrix of dimensions: $(\text{Input-Row}-\text{Kernel-Row}+1)  \times (\text{Input-Column} - \text{Kernel-Column} +1)$ 
