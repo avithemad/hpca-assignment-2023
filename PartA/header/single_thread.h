@@ -26,9 +26,11 @@ void singleThread(int input_row,
             {
                 for (int kernel_j = 0; kernel_j < kernel_col; kernel_j++)
                 {
-                    int i = output_i + 2 * kernel_i, j = output_j + 2 * kernel_j;
-                    int input_i = i >= input_row ? i % input_row : i;
-                    int input_j = j >= input_col ? j % input_col : j;
+                    int input_i = output_i + 2 * kernel_i, input_j = output_j + 2 * kernel_j;
+                    if (input_i >= input_row)
+                        input_i -= input_row;
+                    if (input_j >= input_col)
+                        input_j -= input_col;
 
                     temp += input[input_i * input_col + input_j] * kernel[kernel_i * kernel_col + kernel_j];
                     temp2 += input[input_i * input_col + input_j + 1] * kernel[kernel_i * kernel_col + kernel_j];
