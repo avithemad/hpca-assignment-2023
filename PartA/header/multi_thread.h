@@ -1,5 +1,4 @@
 #include <pthread.h>
-#include <emmintrin.h>
 
 // Define the number of threads
 #define NUM_THREADS 8 // You can adjust this based on the number of CPU cores
