@@ -1,7 +1,7 @@
 #include <pthread.h>
 
 // Define the number of threads
-#define NUM_THREADS 8 // You can adjust this based on the number of CPU cores
+#define NUM_THREADS 4 // You can adjust this based on the number of CPU cores
 
 // Define a structure to hold parameters for each thread
 typedef struct
