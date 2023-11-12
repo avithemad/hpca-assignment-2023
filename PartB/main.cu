@@ -47,10 +47,11 @@ int main(int argc, char *argv[])
     // Define default file names
     string input_file_name = "data/128.in";
     string kernel_file_name = "data/64.in";
+    string mode = "ref";
 
     // Parse command line arguments
     int opt;
-    while ((opt = getopt(argc, argv, "hi:k:")) != -1) {
+    while ((opt = getopt(argc, argv, "hi:k:m:")) != -1) {
         switch (opt) {
             case 'h':
                 std::cout << "Program expects two command line arguments:" << std::endl;
@@ -66,6 +67,9 @@ int main(int argc, char *argv[])
             case 'k':
                 kernel_file_name = optarg;
                 break;
+	    case 'm':
+		mode = optarg;
+		break;
             default:
                 std::cerr << "Usage: " << argv[0] << " [-h] [-i <input_file_name>] [-k <kernel_file_name>]" << std::endl;
                 return 1;
@@ -102,21 +106,25 @@ int main(int argc, char *argv[])
 
     int output_row = input_row - kernel_row + 1;
     int output_col = input_col - kernel_col + 1;
-    
-    // Execute reference program
     long long unsigned int *output_reference = new long long unsigned int[output_row * output_col];
-    reference(input_row, input_col, input, kernel_row, kernel_col, kernel, output_row, output_col, output_reference);    
-    
+
+    // Execute reference program
+    if (mode.find("r") != std::string::npos) {
+        reference(input_row, input_col, input, kernel_row, kernel_col, kernel, output_row, output_col, output_reference);    
+    }
+    if (mode.find("s") != std::string::npos) {
     // Execute gpuThread
     long long unsigned int *output_gpu = new long long unsigned int[output_row * output_col];
     gpuThread(input_row, input_col, input, kernel_row, kernel_col, kernel, output_row, output_col, output_gpu);    
     
-    for(int i = 0; i < output_row * output_col; ++i)
+    for(int i = 0; i < output_row * output_col; ++i){
+	    cout << output_gpu[i] << "\t";
         if(output_gpu[i] != output_reference[i]) {
             cout << "Mismatch at " << i << "\n";
             cout << "GPU output: " << output_gpu[i] << ", required output: " << output_reference[i] << "\n";
             exit(0);
-        }
+        }}
+    }
     input_file.close();
     kernel_file.close(); 
     return 0;  
