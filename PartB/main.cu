@@ -118,7 +118,6 @@ int main(int argc, char *argv[])
     gpuThread(input_row, input_col, input, kernel_row, kernel_col, kernel, output_row, output_col, output_gpu);    
     
     for(int i = 0; i < output_row * output_col; ++i){
-	    cout << output_gpu[i] << "\t";
         if(output_gpu[i] != output_reference[i]) {
             cout << "Mismatch at " << i << "\n";
             cout << "GPU output: " << output_gpu[i] << ", required output: " << output_reference[i] << "\n";
