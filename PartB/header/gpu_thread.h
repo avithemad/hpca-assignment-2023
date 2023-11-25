@@ -12,22 +12,17 @@ __global__ void convolution(int *input,
 {
 	int output_j = blockIdx.y * blockDim.y + threadIdx.y;
 	int output_i = blockIdx.x * blockDim.x + threadIdx.x;
-	if (output_i < output_row && output_j < output_col)
-	{
+	if (output_i < output_row && output_j < output_col) {
 
-		long long unsigned int temp = 0;
-		{
-			for (int kernel_i = 0; kernel_i < kernel_row; kernel_i++)
-			{
-				for (int kernel_j = 0; kernel_j < kernel_col; kernel_j++)
-				{
-					int input_i = (output_i + 2 * kernel_i) % input_row;
-					int input_j = (output_j + 2 * kernel_j) % input_col;
-					temp += input[input_i * input_col + input_j] * kernel[kernel_i * kernel_col + kernel_j];
-				}
-			}
-			output[output_i * output_col + output_j] = temp;
-		}
+		int kernel_idx = blockIdx.z * blockDim.z;
+
+		int kernel_i = kernel_idx/kernel_col;
+		int kernel_j = kernel_idx%kernel_col;
+
+		int input_i = (output_i + 2 * kernel_i) % input_row;
+		int input_j = (output_j + 2 * kernel_j) % input_col;
+
+		atomicAdd(&output[output_i * output_col + output_j], input[input_i * input_col + input_j] * kernel[kernel_idx]);
 	}
 }
 
@@ -65,12 +60,9 @@ void gpuThread(int input_row,
 
 	// max threads per grid is 32x32 = 1024 in CUDA programming model
 	int thread_grid_size = 32;
-	dim3 threadsPerBlock(thread_grid_size, thread_grid_size);
-	dim3 blocksPerGrid(ceil(double(output_row) / float(thread_grid_size)), ceil(double(output_col) / float(thread_grid_size)));
-	cout << "Output rows: " << output_row << " X " << output_col << endl;
-	cout << "blocks per grid : " << blocksPerGrid.x << " X "<< blocksPerGrid.y << endl;
-	cout << "threads per block: " << threadsPerBlock.x << " X " << threadsPerBlock.y << endl;
-
+	dim3 threadsPerBlock(thread_grid_size, thread_grid_size, 1);
+	dim3 blocksPerGrid(ceil(double(output_row) / float(thread_grid_size)), ceil(double(output_col) / float(thread_grid_size)), kernel_row*kernel_col);
+	// std::cout << "blocks per grid: " << blocksPerGrid.x << " " << blocksPerGrid.y << " " << blocksPerGrid.z << std::endl;
 	convolution<<<blocksPerGrid, threadsPerBlock>>>(d_input, d_kernel, d_output, output_row, output_col, kernel_row, kernel_col, input_row, input_col);
 	cuda_err = cudaGetLastError();
 	if (cuda_err != cudaSuccess)

@@ -10,8 +10,8 @@ __global__ void convolution(int *input,
 							int input_row,
 							int input_col)
 {
-	int output_i = blockIdx.y * blockDim.y + threadIdx.y;
-	int output_j = blockIdx.x * blockDim.x + threadIdx.x;
+	int output_j = blockIdx.y * blockDim.y + threadIdx.y;
+	int output_i = blockIdx.x * blockDim.x + threadIdx.x;
 	if (output_i < output_row && output_j < output_col) {
 
 		int kernel_idx = blockIdx.z * blockDim.z;
