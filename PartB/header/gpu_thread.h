@@ -10,14 +10,12 @@ __global__ void convolution(int *input,
 							int input_row,
 							int input_col)
 {
-	int output_i = blockIdx.y * blockDim.y + threadIdx.y;
-	int output_j = blockIdx.x * blockDim.x + threadIdx.x;
+	int output_j = blockIdx.y * blockDim.y + threadIdx.y;
+	int output_i = blockIdx.x * blockDim.x + threadIdx.x;
 	if (output_i < output_row && output_j < output_col)
 	{
 
 		long long unsigned int temp = 0;
-		if (output_i * output_col < output_row && output_j < output_col)
-			;
 		{
 			for (int kernel_i = 0; kernel_i < kernel_row; kernel_i++)
 			{
@@ -69,6 +67,9 @@ void gpuThread(int input_row,
 	int thread_grid_size = 32;
 	dim3 threadsPerBlock(thread_grid_size, thread_grid_size);
 	dim3 blocksPerGrid(ceil(double(output_row) / float(thread_grid_size)), ceil(double(output_col) / float(thread_grid_size)));
+	cout << "Output rows: " << output_row << " X " << output_col << endl;
+	cout << "blocks per grid : " << blocksPerGrid.x << " X "<< blocksPerGrid.y << endl;
+	cout << "threads per block: " << threadsPerBlock.x << " X " << threadsPerBlock.y << endl;
 
 	convolution<<<blocksPerGrid, threadsPerBlock>>>(d_input, d_kernel, d_output, output_row, output_col, kernel_row, kernel_col, input_row, input_col);
 	cuda_err = cudaGetLastError();
