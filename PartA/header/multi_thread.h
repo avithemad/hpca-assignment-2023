@@ -35,24 +35,61 @@ void *convolution_thread(void *arg)
     int output_col = params->output_col;
     long long unsigned int *output = params->output;
 
+    // Get the number of rows and cols that can be calculated contiguously
+    int normal_start_rows = output_row - kernel_row + 1;
+    int normal_start_cols = output_col - kernel_col + 1;
+    normal_start_rows = normal_start_rows - (normal_start_rows % 8);
+    normal_start_cols = normal_start_cols - (normal_start_cols % 8);
+
+    // Debug
+    // cout << normal_start_rows << " X " << normal_start_cols << endl;
+    int *temp = new int[output_row * output_col];
+    for (int kernel_i = 0; kernel_i < kernel_row; kernel_i++)
+    {
+        for (int kernel_j = 0; kernel_j < kernel_col; kernel_j++)
+        {
+            __m256i k_vec = _mm256_set1_epi32(kernel[kernel_i * kernel_col + kernel_j]);
+            for (int output_i = thread_id; output_i < output_row; output_i += NUM_THREADS)
+            {
+                int input_i = (output_i + 2 * kernel_i) % input_row;
+                int input_idx = input_i * input_col;
+                int output_idx = output_i * output_col;
+                for (int output_j = 0; output_j < normal_start_cols; output_j += 8)
+                {
+                    int input_j = (output_j + 2 * kernel_j);
+                    __m256i o_vec = _mm256_loadu_si256((__m256i *)(input + input_idx + input_j));
+
+                    __m256i r_vec = _mm256_mullo_epi32(k_vec, o_vec);
+                    // int *r = (int *)&r_vec;
+                    r_vec = _mm256_add_epi32(r_vec, _mm256_loadu_si256((__m256i *)(temp + output_i * output_col + output_j)));
+                    _mm256_storeu_si256((__m256i *)(temp + output_i * output_col + output_j), r_vec);
+                }
+            }
+        }
+    }
+
+    for (int i = thread_id; i < output_row; i += NUM_THREADS)
+    {
+        int idx = i * output_col;
+        for (int j = 0; j < normal_start_cols; j++)
+        {
+            output[idx] = temp[idx];
+            idx++;
+        }
+    }
     for (int output_i = thread_id; output_i < output_row; output_i += NUM_THREADS)
     {
-        for (int output_j = 0; output_j < output_col; output_j += 2)
+        for (int output_j = normal_start_cols; output_j < output_col; output_j++)
         {
-            long long unsigned int temp = 0;
-            long long unsigned int temp2 = 0;
             for (int kernel_i = 0; kernel_i < kernel_row; kernel_i++)
             {
                 for (int kernel_j = 0; kernel_j < kernel_col; kernel_j++)
                 {
                     int input_i = (output_i + 2 * kernel_i) % input_row;
                     int input_j = (output_j + 2 * kernel_j) % input_col;
-                    temp += input[input_i * input_col + input_j] * kernel[kernel_i * kernel_col + kernel_j];
-                    temp2 += input[input_i * input_col + input_j + 1] * kernel[kernel_i * kernel_col + kernel_j];
+                    output[output_i * output_col + output_j] += input[input_i * input_col + input_j] * kernel[kernel_i * kernel_col + kernel_j];
                 }
             }
-            output[output_i * output_col + output_j] = temp;
-            output[output_i * output_col + output_j + 1] = temp2;
         }
     }
     pthread_exit(NULL);

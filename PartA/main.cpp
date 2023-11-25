@@ -115,14 +115,16 @@ int main(int argc, char *argv[])
     // Untimed, warmup caches and TLB
     long long unsigned int *output_reference = new long long unsigned int[output_row * output_col];
     // reference(input_row, input_col, input, kernel_row, kernel_col, kernel, output_row, output_col, output_reference);
-
+    double ref_time=0.0;
+    double single_time = 0.0;
     // Execute reference program
     if (mode.find("r") != std::string::npos)
     {
         auto begin = TIME_NOW;
         reference(input_row, input_col, input, kernel_row, kernel_col, kernel, output_row, output_col, output_reference);
         auto end = TIME_NOW;
-        cout << "Reference execution time: " << (double)TIME_DIFF(std::chrono::microseconds, begin, end) / 1000.0 << " ms\n";
+        ref_time = (double)TIME_DIFF(std::chrono::microseconds, begin, end) / 1000.0;
+        cout << "Reference execution time: " << ref_time << " ms\n";
     }
 
     // Execute single thread
@@ -132,7 +134,9 @@ int main(int argc, char *argv[])
         auto begin = TIME_NOW;
         singleThread(input_row, input_col, input, kernel_row, kernel_col, kernel, output_row, output_col, output_single);
         auto end = TIME_NOW;
-        cout << "Single thread execution time: " << (double)TIME_DIFF(std::chrono::microseconds, begin, end) / 1000.0 << " ms\n";
+        single_time = (double)TIME_DIFF(std::chrono::microseconds, begin, end) / 1000.0;
+        cout << "Single thread execution time: " << single_time << " ms\n";
+        cout << "Percentage improvement = " << (1.0 - (single_time/ref_time) )*100.0 << "%" << endl;
 
         for (int i = 0; i < output_row * output_col; ++i)
         {
@@ -148,6 +152,7 @@ int main(int argc, char *argv[])
     // Execute multi-thread
     if (mode.find("m") != std::string::npos)
     {
+        cout << "Starting multithread now" << endl;
         long long unsigned int *output_multi = new long long unsigned int[output_row * output_col];
         auto begin = TIME_NOW;
         multiThread(input_row, input_col, input, kernel_row, kernel_col, kernel, output_row, output_col, output_multi);
